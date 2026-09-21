@@ -6,13 +6,19 @@ interface AnswerReviewProps {
   answers: readonly AnswerLog[];
   /** 間違いが1つもないとき「まちがいは なかったよ」を出すか（記録一覧の詳細用） */
   showNoMissMessage?: boolean;
+  /** 「じかんが かかった もんだい」を出すか（まちがえ直しの結果では出さない） */
+  showSlow?: boolean;
 }
 
 /** 1回分の答えから「まちがえた問題」と「時間がかかった問題（正解のうち上位3つ）」を並べて表示する */
-export function AnswerReview({ answers, showNoMissMessage = false }: AnswerReviewProps) {
+export function AnswerReview({
+  answers,
+  showNoMissMessage = false,
+  showSlow = true,
+}: AnswerReviewProps) {
   const uid = useId();
   const missed = answers.filter((a) => !a.correct);
-  const slow = slowestCorrect(answers);
+  const slow = showSlow ? slowestCorrect(answers) : [];
 
   return (
     <>

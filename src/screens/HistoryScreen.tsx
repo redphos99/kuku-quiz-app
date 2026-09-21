@@ -67,7 +67,11 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
                 </button>
                 {open && (
                   <div id={detailId} className="history-detail">
-                    <AnswerReview answers={r.answers} showNoMissMessage />
+                    <AnswerReview
+                      answers={r.answers}
+                      showNoMissMessage
+                      showSlow={r.mode !== 'retry'}
+                    />
                   </div>
                 )}
               </li>

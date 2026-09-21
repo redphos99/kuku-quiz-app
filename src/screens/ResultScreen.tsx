@@ -35,7 +35,8 @@ export function ResultScreen({
   const message = messageFor(percent);
   const missedCount = missedQuestions(record.answers).length;
   const isRetry = record.mode === 'retry';
-  const hasReview = record.answers.length > 0;
+  // まちがえ直しの結果では時間がかかった問題を出さないので、全問正解なら見せる内容がない
+  const hasReview = missedCount > 0 || (!isRetry && record.correctCount > 0);
 
   return (
     <main className="screen result">
@@ -72,7 +73,7 @@ export function ResultScreen({
 
       {hasReview && (
         <div className="panel review-panel">
-          <AnswerReview answers={record.answers} />
+          <AnswerReview answers={record.answers} showSlow={!isRetry} />
         </div>
       )}
 
