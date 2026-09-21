@@ -1,11 +1,15 @@
 import type { QuizRecord } from '../types';
-import { accuracyPercent, formatDuration } from '../quiz';
+import { accuracyPercent, formatDuration, missedQuestions } from '../quiz';
+import { AnswerReview } from '../components/AnswerReview';
 
 interface ResultScreenProps {
   record: QuizRecord;
   /** 記録の保存に成功したか */
   saved: boolean;
+  /** 同じ設定で（まちがえ直しのときは同じ問題で）もういちど */
   onRetry: () => void;
+  /** まちがえた問題だけで練習する */
+  onRetryMissed: () => void;
   onBack: () => void;
   onShowHistory: () => void;
 }
@@ -17,12 +21,21 @@ function messageFor(percent: number): { icon: string; text: string } {
   return { icon: '🌱', text: 'れんしゅうすると どんどん できるようになるよ！' };
 }
 
-export function ResultScreen({ record, saved, onRetry, onBack, onShowHistory }: ResultScreenProps) {
+export function ResultScreen({
+  record,
+  saved,
+  onRetry,
+  onRetryMissed,
+  onBack,
+  onShowHistory,
+}: ResultScreenProps) {
   const total = record.questionCount;
   const wrongCount = total - record.correctCount;
   const percent = accuracyPercent(record.correctCount, total);
   const message = messageFor(percent);
-  const missed = record.answers.filter((a) => !a.correct);
+  const missedCount = missedQuestions(record.answers).length;
+  const isRetry = record.mode === 'retry';
+  const hasReview = record.answers.length > 0;
 
   return (
     <main className="screen result">
@@ -30,6 +43,7 @@ export function ResultScreen({ record, saved, onRetry, onBack, onShowHistory }: 
         <div className="result-icon" aria-hidden="true">
           {message.icon}
         </div>
+        {isRetry && <p className="result-tag">まちがえた もんだいの やりなおし</p>}
         <h1>{message.text}</h1>
         <p className="result-score">
           <strong>{record.correctCount}</strong>
@@ -56,20 +70,10 @@ export function ResultScreen({ record, saved, onRetry, onBack, onShowHistory }: 
         </div>
       </dl>
 
-      {missed.length > 0 && (
-        <section className="panel" aria-labelledby="missed-heading">
-          <h2 id="missed-heading">もういちど かくにんしよう</h2>
-          <ul className="missed-list">
-            {missed.map((a, i) => (
-              <li key={i}>
-                <span className="missed-q">
-                  {a.dan} × {a.multiplier} = <strong>{a.dan * a.multiplier}</strong>
-                </span>
-                <span className="missed-a">（きみの こたえ: {a.userAnswer}）</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+      {hasReview && (
+        <div className="panel review-panel">
+          <AnswerReview answers={record.answers} />
+        </div>
       )}
 
       {!saved && (
@@ -79,8 +83,19 @@ export function ResultScreen({ record, saved, onRetry, onBack, onShowHistory }: 
       )}
 
       <div className="result-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={onRetry}>
-          もういちど
+        {missedCount > 0 && (
+          <button type="button" className="btn btn-primary btn-big btn-wrap" onClick={onRetryMissed}>
+            まちがえた もんだいだけ
+            <br />
+            もういちど（{missedCount}もん）
+          </button>
+        )}
+        <button
+          type="button"
+          className={missedCount > 0 ? 'btn btn-secondary' : 'btn btn-primary btn-big'}
+          onClick={onRetry}
+        >
+          {isRetry ? 'おなじ もんだいで もういちど' : 'もういちど'}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onBack}>
           せっていにもどる

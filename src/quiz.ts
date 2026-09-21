@@ -1,4 +1,4 @@
-import type { Order, Question, QuizSettings } from './types';
+import type { AnswerLog, Order, Question, QuizSettings } from './types';
 
 export const DANS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 const MULTIPLIERS = DANS;
@@ -120,4 +120,35 @@ export function formatDate(iso: string, now: Date = new Date()): string {
   const time = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
   const year = d.getFullYear() === now.getFullYear() ? '' : `${d.getFullYear()}年`;
   return `${year}${d.getMonth() + 1}月${d.getDate()}日 ${time}`;
+}
+
+/** 時間のかかった問題として表示する件数 */
+export const SLOW_COUNT = 3;
+
+/** まちがえた問題（同じ問題を複数回まちがえていても1問にまとめる。出題された順） */
+export function missedQuestions(answers: readonly AnswerLog[]): Question[] {
+  const seen = new Set<string>();
+  const result: Question[] = [];
+  for (const a of answers) {
+    const key = `${a.dan}x${a.multiplier}`;
+    if (a.correct || seen.has(key)) continue;
+    seen.add(key);
+    result.push({ dan: a.dan, multiplier: a.multiplier });
+  }
+  return result;
+}
+
+/** 正解した問題のうち、回答に時間がかかった順に上位 count 件（同じ秒数なら出題順） */
+export function slowestCorrect(answers: readonly AnswerLog[], count = SLOW_COUNT): AnswerLog[] {
+  return answers
+    .filter((a) => a.correct)
+    .map((a, i) => ({ a, i }))
+    .sort((x, y) => y.a.seconds - x.a.seconds || x.i - y.i)
+    .slice(0, count)
+    .map(({ a }) => a);
+}
+
+/** 4.25 → "4.3秒"（回答時間の表示用） */
+export function formatSeconds(seconds: number): string {
+  return `${(Math.round(seconds * 10) / 10).toFixed(1)}秒`;
 }

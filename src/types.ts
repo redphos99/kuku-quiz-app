@@ -33,4 +33,6 @@ export interface QuizRecord {
   correctCount: number;
   durationSeconds: number;
   answers: AnswerLog[];
+  /** 「まちがえた問題だけ もういちど」で行った練習のとき 'retry'（通常の練習は未設定） */
+  mode?: 'retry';
 }

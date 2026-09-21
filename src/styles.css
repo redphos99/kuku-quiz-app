@@ -647,39 +647,6 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-.missed-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.missed-list li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--oops-soft);
-}
-
-.missed-q {
-  font-size: 1.3rem;
-  font-weight: 800;
-}
-
-.missed-q strong {
-  color: var(--oops);
-}
-
-.missed-a {
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-}
-
 .result-actions {
   display: flex;
   flex-direction: column;
@@ -706,10 +673,7 @@ h2 {
 }
 
 .history-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
+  overflow: hidden;
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 0 2px 0 var(--line);
@@ -817,4 +781,136 @@ h2 {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- 復習（まちがい・時間がかかった問題） ---------- */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review + .review {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--line);
+}
+
+.review-panel {
+  gap: 0;
+}
+
+.review-hint {
+  margin: -4px 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.review-empty {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ok);
+}
+
+.review-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.review-missed li {
+  background: var(--oops-soft);
+}
+
+.review-slow li {
+  justify-content: space-between;
+  background: #fff4c7;
+}
+
+.review-q {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-missed .review-q strong {
+  color: var(--oops);
+}
+
+.review-note {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.review-time {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #8a5a00;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-tag {
+  display: inline-block;
+  margin: 0 0 4px;
+  padding: 2px 14px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.btn-wrap {
+  flex-direction: column;
+  line-height: 1.3;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* ---------- 記録一覧：タップで詳細を開く ---------- */
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.history-chevron {
+  align-self: center;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.history-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 16px;
+}
+
+.history-detail .review h2 {
+  font-size: 1rem;
+}
+
+.badge-retry {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
 }
