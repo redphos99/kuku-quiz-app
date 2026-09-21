@@ -7,8 +7,11 @@ import {
   formatRange,
   generateQuestions,
   poolSize,
+  formatSeconds,
+  missedQuestions,
+  slowestCorrect,
 } from './quiz';
-import type { Question, QuizSettings } from './types';
+import type { AnswerLog, Question, QuizSettings } from './types';
 
 const key = (q: Question) => `${q.dan}x${q.multiplier}`;
 
@@ -108,5 +111,60 @@ describe('formatting helpers', () => {
   it('counts the pool', () => {
     expect(poolSize([2, 5])).toBe(18);
     expect(poolSize([2, 2])).toBe(9);
+  });
+});
+
+function log(dan: number, multiplier: number, correct: boolean, seconds: number): AnswerLog {
+  return { dan, multiplier, userAnswer: correct ? dan * multiplier : 0, correct, seconds };
+}
+
+describe('missedQuestions', () => {
+  it('lists wrong answers in the order asked, without duplicates', () => {
+    const answers = [
+      log(7, 8, false, 3),
+      log(2, 3, true, 1),
+      log(6, 4, false, 2),
+      log(7, 8, false, 4),
+    ];
+    expect(missedQuestions(answers)).toEqual([
+      { dan: 7, multiplier: 8 },
+      { dan: 6, multiplier: 4 },
+    ]);
+  });
+
+  it('returns nothing when everything was correct', () => {
+    expect(missedQuestions([log(1, 1, true, 1)])).toEqual([]);
+  });
+});
+
+describe('slowestCorrect', () => {
+  it('returns the 3 slowest correct answers, slowest first', () => {
+    const answers = [
+      log(2, 2, true, 1.5),
+      log(3, 3, true, 6.2),
+      log(4, 4, false, 20), // まちがいは対象外
+      log(5, 5, true, 4.1),
+      log(6, 6, true, 9.9),
+      log(7, 7, true, 2),
+    ];
+    expect(slowestCorrect(answers).map((a) => a.seconds)).toEqual([9.9, 6.2, 4.1]);
+  });
+
+  it('keeps the asked order for equal times', () => {
+    const answers = [log(2, 2, true, 3), log(3, 3, true, 3), log(4, 4, true, 3), log(5, 5, true, 3)];
+    expect(slowestCorrect(answers).map((a) => a.dan)).toEqual([2, 3, 4]);
+  });
+
+  it('returns fewer than 3 when there are not enough correct answers', () => {
+    expect(slowestCorrect([log(2, 2, true, 1), log(3, 3, false, 5)])).toHaveLength(1);
+    expect(slowestCorrect([log(3, 3, false, 5)])).toEqual([]);
+  });
+});
+
+describe('formatSeconds', () => {
+  it('shows one decimal place', () => {
+    expect(formatSeconds(4.25)).toBe('4.3秒');
+    expect(formatSeconds(3)).toBe('3.0秒');
+    expect(formatSeconds(12.34)).toBe('12.3秒');
   });
 });

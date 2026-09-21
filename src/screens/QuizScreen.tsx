@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AnswerLog, QuizSettings } from '../types';
+import type { AnswerLog, Question, QuizSettings } from '../types';
 import { formatClock, generateQuestions } from '../quiz';
 import { Numpad } from '../components/Numpad';
 
@@ -10,6 +10,8 @@ export interface QuizResult {
 
 interface QuizScreenProps {
   settings: QuizSettings;
+  /** 指定すると、設定から作る代わりにこの問題をこの順で出題する（まちがえ直し用） */
+  questions?: Question[];
   onFinish: (result: QuizResult) => void;
   onQuit: () => void;
 }
@@ -19,8 +21,8 @@ const AUTO_ADVANCE_MS = 900;
 /** 連打で正誤の表示を飛ばしてしまわないための猶予 */
 const ADVANCE_GUARD_MS = 350;
 
-export function QuizScreen({ settings, onFinish, onQuit }: QuizScreenProps) {
-  const [questions] = useState(() => generateQuestions(settings));
+export function QuizScreen({ settings, questions: fixedQuestions, onFinish, onQuit }: QuizScreenProps) {
+  const [questions] = useState(() => fixedQuestions ?? generateQuestions(settings));
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState('');
   const [answers, setAnswers] = useState<AnswerLog[]>([]);
