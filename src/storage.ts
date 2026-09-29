@@ -42,7 +42,8 @@ function isRecord(value: unknown): value is QuizRecord {
     isNumber(v.durationSeconds) &&
     Array.isArray(v.answers) &&
     v.answers.every(isAnswerLog) &&
-    (v.mode === undefined || v.mode === 'retry')
+    (v.mode === undefined || v.mode === 'retry') &&
+    (v.stageId === undefined || typeof v.stageId === 'string')
   );
 }
 

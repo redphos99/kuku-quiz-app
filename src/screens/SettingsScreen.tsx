@@ -9,10 +9,12 @@ import {
   formatRange,
   poolSize,
 } from '../quiz';
-import { loadSettings, saveSettings } from '../storage';
+import { STAGES, stageProgress } from '../stages';
+import { loadRecords, loadSettings, saveSettings } from '../storage';
 
 interface SettingsScreenProps {
   onStart: (settings: QuizSettings) => void;
+  onShowStages: () => void;
   onShowHistory: () => void;
 }
 
@@ -24,7 +26,7 @@ function parseCustomCount(text: string): number | null {
   return n >= MIN_QUESTIONS && n <= MAX_QUESTIONS ? n : null;
 }
 
-export function SettingsScreen({ onStart, onShowHistory }: SettingsScreenProps) {
+export function SettingsScreen({ onStart, onShowStages, onShowHistory }: SettingsScreenProps) {
   // 前回の設定を引き継ぐ（何度も同じ設定で練習しやすくするため）
   const [initial] = useState(loadSettings);
   const [customMode, setCustomMode] = useState(
@@ -38,6 +40,7 @@ export function SettingsScreen({ onStart, onShowHistory }: SettingsScreenProps) 
   const [customText, setCustomText] = useState(String(initial.questionCount));
   const [range, setRange] = useState<number[]>(initial.range);
   const [order, setOrder] = useState<Order>(initial.order);
+  const [clearedCount] = useState(() => stageProgress(loadRecords()).size);
 
   const questionCount = customMode ? parseCustomCount(customText) : presetCount;
   const canStart = questionCount !== null && range.length > 0;
@@ -68,6 +71,18 @@ export function SettingsScreen({ onStart, onShowHistory }: SettingsScreenProps) 
           きろく
         </button>
       </header>
+
+      <button type="button" className="stage-entry" onClick={onShowStages}>
+        <span className="stage-entry-main">
+          <strong>ステップれんしゅう</strong>
+          <span>1つの だんから じゅんに クリアしていこう</span>
+        </span>
+        <span className="stage-entry-count">
+          ⭐ {clearedCount}/{STAGES.length}
+        </span>
+      </button>
+
+      <h2 className="section-title">じゆうれんしゅう</h2>
 
       <section className="panel" aria-labelledby="count-heading">
         <h2 id="count-heading">なんもん やる？</h2>

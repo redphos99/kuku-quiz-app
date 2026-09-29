@@ -1,26 +1,48 @@
 import { useEffect, useState } from 'react';
-import type { Question, QuizRecord, QuizSettings } from './types';
-import { missedQuestions } from './quiz';
-import { createId, saveRecord } from './storage';
+import type { Question, QuizRecord, QuizSettings, Stage } from './types';
+import { generateQuestions, missedQuestions } from './quiz';
+import { isClearRecord, isStageUnlocked, nextStage, stageProgress, stageQuestions } from './stages';
+import { createId, loadRecords, saveRecord } from './storage';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { QuizScreen, type QuizResult } from './screens/QuizScreen';
-import { ResultScreen } from './screens/ResultScreen';
+import { ResultScreen, type StageOutcome } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { StageScreen } from './screens/StageScreen';
+
+/** どんな練習をするか */
+type BasePlan = { kind: 'free'; settings: QuizSettings } | { kind: 'stage'; stage: Stage };
+/** retry は、まちがえた問題だけをこの順で出題する（from は元の練習） */
+type Plan = BasePlan | { kind: 'retry'; questions: Question[]; from: BasePlan };
 
 type Screen =
   | { name: 'settings' }
-  // 「もういちど」で同じ設定から新しい問題を作り直せるよう、round を鍵にして再マウントする。
-  // questions があるときは、その問題だけを出題する（まちがえ直し）
-  | { name: 'quiz'; settings: QuizSettings; round: number; questions?: Question[] }
+  // 「もういちど」で問題を作り直せるよう、round を鍵にして再マウントする
+  | { name: 'quiz'; plan: Plan; questions: Question[]; round: number }
   | {
       name: 'result';
-      settings: QuizSettings;
+      plan: Plan;
       record: QuizRecord;
       saved: boolean;
-      /** まちがえ直しの結果のとき、そのとき出題した問題（「おなじ もんだいで もういちど」用） */
-      questions?: Question[];
+      /** ステップれんしゅうのときのクリア判定 */
+      outcome?: StageOutcome;
     }
+  | { name: 'stages' }
   | { name: 'history' };
+
+function baseOf(plan: Plan): BasePlan {
+  return plan.kind === 'retry' ? plan.from : plan;
+}
+
+function questionsFor(plan: Plan): Question[] {
+  switch (plan.kind) {
+    case 'free':
+      return generateQuestions(plan.settings);
+    case 'stage':
+      return stageQuestions(plan.stage);
+    case 'retry':
+      return plan.questions;
+  }
+}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'settings' });
@@ -31,59 +53,102 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [screen.name]);
 
-  const startQuiz = (settings: QuizSettings, questions?: Question[]) => {
+  const startQuiz = (plan: Plan) => {
     const next = round + 1;
     setRound(next);
-    setScreen({ name: 'quiz', settings, round: next, questions });
+    setScreen({ name: 'quiz', plan, questions: questionsFor(plan), round: next });
   };
 
-  const finishQuiz = (
-    settings: QuizSettings,
-    questions: Question[] | undefined,
-    { answers, durationMs }: QuizResult,
-  ) => {
+  const finishQuiz = (plan: Plan, { answers, durationMs }: QuizResult) => {
+    const base = baseOf(plan);
     const record: QuizRecord = {
       id: createId(),
       date: new Date().toISOString(),
-      range: questions
-        ? [...new Set(questions.map((q) => q.dan))].sort((a, b) => a - b)
-        : [...settings.range],
-      order: settings.order,
+      range:
+        plan.kind === 'retry'
+          ? [...new Set(plan.questions.map((q) => q.dan))].sort((a, b) => a - b)
+          : base.kind === 'stage'
+            ? [...base.stage.dans]
+            : [...base.settings.range],
+      order: base.kind === 'stage' ? base.stage.order : base.settings.order,
       questionCount: answers.length,
       correctCount: answers.filter((a) => a.correct).length,
       durationSeconds: Math.round(durationMs / 1000),
       answers,
-      ...(questions ? { mode: 'retry' as const } : {}),
+      ...(plan.kind === 'retry' ? { mode: 'retry' as const } : {}),
+      ...(base.kind === 'stage' ? { stageId: base.stage.id } : {}),
     };
+
+    let outcome: StageOutcome | undefined;
+    if (plan.kind === 'stage') {
+      // 保存する前の進み具合と比べる（保存に失敗しても、今回のクリアは次の解放に反映する）
+      const clearedBefore = new Set(stageProgress(loadRecords()).keys());
+      const cleared = isClearRecord(record, plan.stage);
+      const clearedNow = new Set(clearedBefore);
+      if (cleared) clearedNow.add(plan.stage.id);
+      const next = nextStage(plan.stage);
+      outcome = {
+        stage: plan.stage,
+        cleared,
+        firstClear: cleared && !clearedBefore.has(plan.stage.id),
+        next: cleared && next && isStageUnlocked(next, clearedNow) ? next : undefined,
+      };
+    }
     const saved = saveRecord(record);
-    setScreen({ name: 'result', settings, record, saved, questions });
+    setScreen({ name: 'result', plan, record, saved, outcome });
   };
+
+  const showStages = () => setScreen({ name: 'stages' });
+  const showSettings = () => setScreen({ name: 'settings' });
+  const showHistory = () => setScreen({ name: 'history' });
 
   switch (screen.name) {
     case 'settings':
-      return <SettingsScreen onStart={startQuiz} onShowHistory={() => setScreen({ name: 'history' })} />;
-    case 'quiz':
+      return (
+        <SettingsScreen
+          onStart={(settings) => startQuiz({ kind: 'free', settings })}
+          onShowStages={showStages}
+          onShowHistory={showHistory}
+        />
+      );
+    case 'stages':
+      return (
+        <StageScreen onStart={(stage) => startQuiz({ kind: 'stage', stage })} onBack={showSettings} />
+      );
+    case 'quiz': {
+      const { plan } = screen;
+      const stage = plan.kind === 'stage' ? plan.stage : undefined;
       return (
         <QuizScreen
           key={screen.round}
-          settings={screen.settings}
           questions={screen.questions}
-          onFinish={(result) => finishQuiz(screen.settings, screen.questions, result)}
-          onQuit={() => setScreen({ name: 'settings' })}
+          targetSeconds={stage?.targetSeconds}
+          onFinish={(result) => finishQuiz(plan, result)}
+          onQuit={baseOf(plan).kind === 'stage' ? showStages : showSettings}
         />
       );
-    case 'result':
+    }
+    case 'result': {
+      const { plan, record } = screen;
+      const base = baseOf(plan);
+      const next = screen.outcome?.next;
       return (
         <ResultScreen
-          record={screen.record}
+          record={record}
           saved={screen.saved}
-          onRetry={() => startQuiz(screen.settings, screen.questions)}
-          onRetryMissed={() => startQuiz(screen.settings, missedQuestions(screen.record.answers))}
-          onBack={() => setScreen({ name: 'settings' })}
-          onShowHistory={() => setScreen({ name: 'history' })}
+          outcome={screen.outcome}
+          onRetry={() => startQuiz(plan)}
+          onRetryMissed={() =>
+            startQuiz({ kind: 'retry', questions: missedQuestions(record.answers), from: base })
+          }
+          onNextStage={next && (() => startQuiz({ kind: 'stage', stage: next }))}
+          backLabel={base.kind === 'stage' ? 'ステップにもどる' : 'せっていにもどる'}
+          onBack={base.kind === 'stage' ? showStages : showSettings}
+          onShowHistory={showHistory}
         />
       );
+    }
     case 'history':
-      return <HistoryScreen onBack={() => setScreen({ name: 'settings' })} />;
+      return <HistoryScreen onBack={showSettings} />;
   }
 }
