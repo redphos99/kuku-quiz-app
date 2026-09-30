@@ -156,8 +156,14 @@ describe('slowestCorrect', () => {
   });
 
   it('returns fewer than 3 when there are not enough correct answers', () => {
-    expect(slowestCorrect([log(2, 2, true, 1), log(3, 3, false, 5)])).toHaveLength(1);
+    expect(slowestCorrect([log(2, 2, true, 4), log(3, 3, false, 5)])).toHaveLength(1);
     expect(slowestCorrect([log(3, 3, false, 5)])).toEqual([]);
+  });
+
+  it('only includes answers that took 3 seconds or more', () => {
+    const answers = [log(2, 2, true, 2.9), log(3, 3, true, 3), log(4, 4, true, 1), log(5, 5, true, 7)];
+    expect(slowestCorrect(answers).map((a) => a.seconds)).toEqual([7, 3]);
+    expect(slowestCorrect([log(2, 2, true, 1), log(3, 3, true, 2.9)])).toEqual([]);
   });
 });
 

@@ -9,13 +9,11 @@ import {
   formatRange,
   poolSize,
 } from '../quiz';
-import { STAGES, stageProgress } from '../stages';
-import { loadRecords, loadSettings, saveSettings } from '../storage';
+import { loadSettings, saveSettings } from '../storage';
 
 interface SettingsScreenProps {
   onStart: (settings: QuizSettings) => void;
-  onShowStages: () => void;
-  onShowHistory: () => void;
+  onBack: () => void;
 }
 
 const ORDERS: Order[] = ['asc', 'desc', 'random'];
@@ -26,7 +24,7 @@ function parseCustomCount(text: string): number | null {
   return n >= MIN_QUESTIONS && n <= MAX_QUESTIONS ? n : null;
 }
 
-export function SettingsScreen({ onStart, onShowStages, onShowHistory }: SettingsScreenProps) {
+export function SettingsScreen({ onStart, onBack }: SettingsScreenProps) {
   // 前回の設定を引き継ぐ（何度も同じ設定で練習しやすくするため）
   const [initial] = useState(loadSettings);
   const [customMode, setCustomMode] = useState(
@@ -40,7 +38,6 @@ export function SettingsScreen({ onStart, onShowStages, onShowHistory }: Setting
   const [customText, setCustomText] = useState(String(initial.questionCount));
   const [range, setRange] = useState<number[]>(initial.range);
   const [order, setOrder] = useState<Order>(initial.order);
-  const [clearedCount] = useState(() => stageProgress(loadRecords()).size);
 
   const questionCount = customMode ? parseCustomCount(customText) : presetCount;
   const canStart = questionCount !== null && range.length > 0;
@@ -61,28 +58,12 @@ export function SettingsScreen({ onStart, onShowStages, onShowHistory }: Setting
   return (
     <main className="screen settings">
       <header className="top-bar">
-        <h1 className="app-title">
-          <span className="app-title-mark" aria-hidden="true">
-            ×
-          </span>
-          くくれんしゅう
-        </h1>
-        <button type="button" className="btn btn-ghost btn-small" onClick={onShowHistory}>
-          きろく
+        <button type="button" className="btn btn-ghost btn-small" onClick={onBack}>
+          ← もどる
         </button>
+        <h1 className="page-title">じゆうれんしゅう</h1>
+        <span className="top-bar-spacer" aria-hidden="true" />
       </header>
-
-      <button type="button" className="stage-entry" onClick={onShowStages}>
-        <span className="stage-entry-main">
-          <strong>ステップれんしゅう</strong>
-          <span>1つの だんから じゅんに クリアしていこう</span>
-        </span>
-        <span className="stage-entry-count">
-          ⭐ {clearedCount}/{STAGES.length}
-        </span>
-      </button>
-
-      <h2 className="section-title">じゆうれんしゅう</h2>
 
       <section className="panel" aria-labelledby="count-heading">
         <h2 id="count-heading">なんもん やる？</h2>

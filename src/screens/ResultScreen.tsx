@@ -1,5 +1,5 @@
 import type { QuizRecord, Stage } from '../types';
-import { accuracyPercent, formatDuration, missedQuestions } from '../quiz';
+import { accuracyPercent, formatDuration, missedQuestions, slowestCorrect } from '../quiz';
 import { stageLabel } from '../stages';
 import { AnswerReview } from '../components/AnswerReview';
 
@@ -71,8 +71,8 @@ export function ResultScreen({
   const message = outcome ? stageMessageFor(outcome, record, percent) : messageFor(percent);
   const missedCount = missedQuestions(record.answers).length;
   const isRetry = record.mode === 'retry';
-  // まちがえ直しの結果では時間がかかった問題を出さないので、全問正解なら見せる内容がない
-  const hasReview = missedCount > 0 || (!isRetry && record.correctCount > 0);
+  // まちがえ直しの結果では時間がかかった問題を出さない
+  const hasReview = missedCount > 0 || (!isRetry && slowestCorrect(record.answers).length > 0);
 
   return (
     <main className="screen result">

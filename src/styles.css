@@ -917,48 +917,79 @@ h2 {
 
 /* ---------- ステップれんしゅう ---------- */
 
-.section-title {
-  margin: 8px 0 -4px;
-  font-size: 1rem;
-  color: var(--ink-soft);
+.home-lead {
+  margin: 16px 0 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
 }
 
-.stage-entry {
+.home-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mode-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 16px;
+  min-height: 120px;
+  padding: 20px 16px;
   border: 0;
   border-radius: var(--radius);
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 0 var(--primary-shadow);
   text-align: left;
 }
 
-.stage-entry:active {
+.mode-card:active {
   transform: translateY(3px);
+}
+
+.mode-card-stage {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--primary-shadow);
+}
+
+.mode-card-stage:active {
   box-shadow: 0 1px 0 var(--primary-shadow);
 }
 
-.stage-entry-main {
+.mode-card-free {
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--primary-soft);
+  box-shadow: 0 4px 0 #b3c7f5;
+}
+
+.mode-card-free:active {
+  box-shadow: 0 1px 0 #b3c7f5;
+}
+
+.mode-card-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.mode-card-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
-.stage-entry-main strong {
-  font-size: 1.3rem;
+.mode-card-main strong {
+  font-size: 1.35rem;
 }
 
-.stage-entry-main span {
+.mode-card-main span {
   font-size: 0.9rem;
   opacity: 0.9;
 }
 
-.stage-entry-count,
+.mode-card-count,
 .stage-total {
   flex-shrink: 0;
   font-weight: 800;

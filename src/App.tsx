@@ -8,6 +8,7 @@ import { QuizScreen, type QuizResult } from './screens/QuizScreen';
 import { ResultScreen, type StageOutcome } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { StageScreen } from './screens/StageScreen';
+import { HomeScreen } from './screens/HomeScreen';
 
 /** どんな練習をするか */
 type BasePlan = { kind: 'free'; settings: QuizSettings } | { kind: 'stage'; stage: Stage };
@@ -15,6 +16,7 @@ type BasePlan = { kind: 'free'; settings: QuizSettings } | { kind: 'stage'; stag
 type Plan = BasePlan | { kind: 'retry'; questions: Question[]; from: BasePlan };
 
 type Screen =
+  | { name: 'home' }
   | { name: 'settings' }
   // 「もういちど」で問題を作り直せるよう、round を鍵にして再マウントする
   | { name: 'quiz'; plan: Plan; questions: Question[]; round: number }
@@ -45,7 +47,7 @@ function questionsFor(plan: Plan): Question[] {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>({ name: 'settings' });
+  const [screen, setScreen] = useState<Screen>({ name: 'home' });
   const [round, setRound] = useState(0);
 
   // 画面が変わったら先頭から表示する
@@ -98,22 +100,23 @@ export default function App() {
     setScreen({ name: 'result', plan, record, saved, outcome });
   };
 
+  const showHome = () => setScreen({ name: 'home' });
   const showStages = () => setScreen({ name: 'stages' });
   const showSettings = () => setScreen({ name: 'settings' });
   const showHistory = () => setScreen({ name: 'history' });
 
   switch (screen.name) {
+    case 'home':
+      return (
+        <HomeScreen onShowStages={showStages} onShowFree={showSettings} onShowHistory={showHistory} />
+      );
     case 'settings':
       return (
-        <SettingsScreen
-          onStart={(settings) => startQuiz({ kind: 'free', settings })}
-          onShowStages={showStages}
-          onShowHistory={showHistory}
-        />
+        <SettingsScreen onStart={(settings) => startQuiz({ kind: 'free', settings })} onBack={showHome} />
       );
     case 'stages':
       return (
-        <StageScreen onStart={(stage) => startQuiz({ kind: 'stage', stage })} onBack={showSettings} />
+        <StageScreen onStart={(stage) => startQuiz({ kind: 'stage', stage })} onBack={showHome} />
       );
     case 'quiz': {
       const { plan } = screen;
@@ -149,6 +152,6 @@ export default function App() {
       );
     }
     case 'history':
-      return <HistoryScreen onBack={showSettings} />;
+      return <HistoryScreen onBack={showHome} />;
   }
 }

@@ -124,6 +124,8 @@ export function formatDate(iso: string, now: Date = new Date()): string {
 
 /** 時間のかかった問題として表示する件数 */
 export const SLOW_COUNT = 3;
+/** この秒数以上かかった問題だけを「時間のかかった問題」にする */
+export const SLOW_MIN_SECONDS = 3;
 
 /** まちがえた問題（同じ問題を複数回まちがえていても1問にまとめる。出題された順） */
 export function missedQuestions(answers: readonly AnswerLog[]): Question[] {
@@ -138,10 +140,10 @@ export function missedQuestions(answers: readonly AnswerLog[]): Question[] {
   return result;
 }
 
-/** 正解した問題のうち、回答に時間がかかった順に上位 count 件（同じ秒数なら出題順） */
+/** 正解した問題のうち SLOW_MIN_SECONDS 秒以上かかったものを、時間がかかった順に上位 count 件（同じ秒数なら出題順） */
 export function slowestCorrect(answers: readonly AnswerLog[], count = SLOW_COUNT): AnswerLog[] {
   return answers
-    .filter((a) => a.correct)
+    .filter((a) => a.correct && a.seconds >= SLOW_MIN_SECONDS)
     .map((a, i) => ({ a, i }))
     .sort((x, y) => y.a.seconds - x.a.seconds || x.i - y.i)
     .slice(0, count)
