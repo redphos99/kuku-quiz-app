@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Question, QuizRecord, QuizSettings, Stage } from './types';
 import { generateQuestions, missedQuestions } from './quiz';
-import { isClearRecord, isStageUnlocked, nextStage, stageProgress, stageQuestions } from './stages';
+import { stageOutcome, stageQuestions, type StageOutcome } from './stages';
 import { createId, loadRecords, saveRecord } from './storage';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { QuizScreen, type QuizResult } from './screens/QuizScreen';
-import { ResultScreen, type StageOutcome } from './screens/ResultScreen';
+import { ResultScreen } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { StageScreen } from './screens/StageScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -81,21 +81,9 @@ export default function App() {
       ...(base.kind === 'stage' ? { stageId: base.stage.id } : {}),
     };
 
-    let outcome: StageOutcome | undefined;
-    if (plan.kind === 'stage') {
-      // 保存する前の進み具合と比べる（保存に失敗しても、今回のクリアは次の解放に反映する）
-      const clearedBefore = new Set(stageProgress(loadRecords()).keys());
-      const cleared = isClearRecord(record, plan.stage);
-      const clearedNow = new Set(clearedBefore);
-      if (cleared) clearedNow.add(plan.stage.id);
-      const next = nextStage(plan.stage);
-      outcome = {
-        stage: plan.stage,
-        cleared,
-        firstClear: cleared && !clearedBefore.has(plan.stage.id),
-        next: cleared && next && isStageUnlocked(next, clearedNow) ? next : undefined,
-      };
-    }
+    // 保存する前の記録と比べる
+    const outcome =
+      plan.kind === 'stage' ? stageOutcome(record, plan.stage, loadRecords()) : undefined;
     const saved = saveRecord(record);
     setScreen({ name: 'result', plan, record, saved, outcome });
   };
@@ -104,6 +92,11 @@ export default function App() {
   const showStages = () => setScreen({ name: 'stages' });
   const showSettings = () => setScreen({ name: 'settings' });
   const showHistory = () => setScreen({ name: 'history' });
+  /** 練習をやめたとき・結果画面から もどる先 */
+  const backFor = (plan: Plan) =>
+    baseOf(plan).kind === 'stage'
+      ? { label: 'ステップにもどる', go: showStages }
+      : { label: 'せっていにもどる', go: showSettings };
 
   switch (screen.name) {
     case 'home':
@@ -127,7 +120,7 @@ export default function App() {
           questions={screen.questions}
           targetSeconds={stage?.targetSeconds}
           onFinish={(result) => finishQuiz(plan, result)}
-          onQuit={baseOf(plan).kind === 'stage' ? showStages : showSettings}
+          onQuit={backFor(plan).go}
         />
       );
     }
@@ -135,6 +128,7 @@ export default function App() {
       const { plan, record } = screen;
       const base = baseOf(plan);
       const next = screen.outcome?.next;
+      const back = backFor(plan);
       return (
         <ResultScreen
           record={record}
@@ -145,8 +139,8 @@ export default function App() {
             startQuiz({ kind: 'retry', questions: missedQuestions(record.answers), from: base })
           }
           onNextStage={next && (() => startQuiz({ kind: 'stage', stage: next }))}
-          backLabel={base.kind === 'stage' ? 'ステップにもどる' : 'せっていにもどる'}
-          onBack={base.kind === 'stage' ? showStages : showSettings}
+          backLabel={back.label}
+          onBack={back.go}
           onShowHistory={showHistory}
         />
       );

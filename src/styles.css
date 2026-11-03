@@ -17,6 +17,10 @@
   --oops: #c2570c; /* まちがいは赤ではなくあたたかいオレンジで、やさしく伝える */
   --oops-soft: #ffe9cf;
   --warn: #b45309;
+  /* クリア・ぜんぶ せいかい・時間がかかった問題の金色 */
+  --gold: #f5c451;
+  --gold-soft: #fff4c7;
+  --gold-ink: #78350f;
 
   --radius: 20px;
   --font: 'Hiragino Maru Gothic ProN', 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic',
@@ -680,7 +684,7 @@ h2 {
 }
 
 .history-item.is-perfect {
-  box-shadow: 0 2px 0 #f5c451;
+  box-shadow: 0 2px 0 var(--gold);
   background: #fffbea;
 }
 
@@ -726,7 +730,7 @@ h2 {
   padding: 0 10px;
   border-radius: 999px;
   background: #fde68a;
-  color: #78350f;
+  color: var(--gold-ink);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -837,7 +841,7 @@ h2 {
 
 .review-slow li {
   justify-content: space-between;
-  background: #fff4c7;
+  background: var(--gold-soft);
 }
 
 .review-q {
@@ -1066,10 +1070,10 @@ h2 {
 }
 
 .stage-btn.is-cleared {
-  border-color: #f5c451;
-  background: #fff4c7;
-  color: #78350f;
-  box-shadow: 0 3px 0 #f5c451;
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+  box-shadow: 0 3px 0 var(--gold);
 }
 
 .stage-icon {
@@ -1083,9 +1087,9 @@ h2 {
 }
 
 .stage-final.is-cleared {
-  background: #fff4c7;
-  color: #78350f;
-  box-shadow: 0 4px 0 #f5c451;
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+  box-shadow: 0 4px 0 var(--gold);
 }
 
 .quiz-target {
@@ -1117,8 +1121,8 @@ h2 {
 }
 
 .clear-box.is-cleared {
-  background: #fff4c7;
-  box-shadow: 0 2px 0 #f5c451;
+  background: var(--gold-soft);
+  box-shadow: 0 2px 0 var(--gold);
 }
 
 .clear-box .clear-hint {

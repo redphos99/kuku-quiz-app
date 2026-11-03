@@ -130,6 +130,7 @@ export function QuizScreen({ questions, targetSeconds, onFinish, onQuit }: QuizS
   // 記録と同じく秒に丸めて比べる（最後の回答で時間が止まる）
   const shownMs = endedAt.current === null ? elapsedMs : endedAt.current - startedAt.current;
   const overTarget = targetSeconds !== undefined && Math.round(shownMs / 1000) > targetSeconds;
+  const targetText = targetSeconds === undefined ? undefined : formatClock(targetSeconds * 1000);
 
   return (
     <main className="screen quiz">
@@ -143,15 +144,11 @@ export function QuizScreen({ questions, targetSeconds, onFinish, onQuit }: QuizS
         <div
           className={'quiz-clock' + (overTarget ? ' is-over' : '')}
           aria-label={
-            targetSeconds === undefined
-              ? 'けいかじかん'
-              : `けいかじかん（もくひょう ${formatClock(targetSeconds * 1000)}）`
+            targetText === undefined ? 'けいかじかん' : `けいかじかん（もくひょう ${targetText}）`
           }
         >
           {formatClock(shownMs)}
-          {targetSeconds !== undefined && (
-            <span className="quiz-target">/ {formatClock(targetSeconds * 1000)}</span>
-          )}
+          {targetText !== undefined && <span className="quiz-target">/ {targetText}</span>}
         </div>
       </header>
       <div

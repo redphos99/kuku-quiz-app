@@ -1,17 +1,7 @@
-import type { QuizRecord, Stage } from '../types';
-import { accuracyPercent, formatDuration, missedQuestions, slowestCorrect } from '../quiz';
-import { stageLabel } from '../stages';
+import type { QuizRecord } from '../types';
+import { accuracyPercent, formatDuration, isSlowCorrect, missedQuestions } from '../quiz';
+import { stageLabel, type StageOutcome } from '../stages';
 import { AnswerReview } from '../components/AnswerReview';
-
-/** ステップれんしゅうの結果 */
-export interface StageOutcome {
-  stage: Stage;
-  cleared: boolean;
-  /** はじめてのクリアか */
-  firstClear: boolean;
-  /** 次のステージ（クリアして、次が解放されているときだけ） */
-  next?: Stage;
-}
 
 interface ResultScreenProps {
   record: QuizRecord;
@@ -72,7 +62,7 @@ export function ResultScreen({
   const missedCount = missedQuestions(record.answers).length;
   const isRetry = record.mode === 'retry';
   // まちがえ直しの結果では時間がかかった問題を出さない
-  const hasReview = missedCount > 0 || (!isRetry && slowestCorrect(record.answers).length > 0);
+  const hasReview = missedCount > 0 || (!isRetry && record.answers.some(isSlowCorrect));
 
   return (
     <main className="screen result">

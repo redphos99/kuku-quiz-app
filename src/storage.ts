@@ -1,5 +1,5 @@
 import type { AnswerLog, Order, QuizRecord, QuizSettings } from './types';
-import { DANS, MAX_QUESTIONS, MIN_QUESTIONS } from './quiz';
+import { DANS, MAX_QUESTIONS, MIN_QUESTIONS, ORDERS } from './quiz';
 
 const RECORDS_KEY = 'kakezan-kuku:records:v1';
 const SETTINGS_KEY = 'kakezan-kuku:settings:v1';
@@ -9,8 +9,6 @@ export const DEFAULT_SETTINGS: QuizSettings = {
   range: [...DANS],
   order: 'random',
 };
-
-const ORDERS: readonly Order[] = ['asc', 'desc', 'random'];
 
 function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);

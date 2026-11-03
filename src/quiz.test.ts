@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   accuracyPercent,
   formatClock,
+  formatDans,
   formatDate,
   formatDuration,
   formatRange,
@@ -82,6 +83,9 @@ describe('formatting helpers', () => {
     expect(formatRange([1, 2])).toBe('1・2のだん');
     expect(formatRange([9, 3, 4, 5, 1])).toBe('1・3〜5・9のだん');
     expect(formatRange([7])).toBe('7のだん');
+    expect(formatRange([])).toBe('-');
+    expect(formatDans([9, 3, 4, 5, 1])).toBe('1・3〜5・9');
+    expect(formatDans([7])).toBe('7');
   });
 
   it('formats durations', () => {

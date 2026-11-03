@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Order, Stage, StageStep } from '../types';
-import { formatDuration, formatRange } from '../quiz';
+import type { Stage, StageStep } from '../types';
+import { ORDERS, formatDans, formatDuration, poolSize } from '../quiz';
 import {
   PATTERN_LABELS,
   STAGES,
@@ -16,8 +16,6 @@ interface StageScreenProps {
   onStart: (stage: Stage) => void;
   onBack: () => void;
 }
-
-const PATTERNS: Order[] = ['asc', 'desc', 'random'];
 
 const STEP_HINTS: Record<StageStep, string> = {
   1: 'すきな だんから はじめてね。じゅんばん → ぎゃく → ランダム の じゅんに あそべるよ',
@@ -57,7 +55,7 @@ function StageButton({ stage, progress, unlocked, onStart }: StageButtonProps) {
 
 export function StageScreen({ onStart, onBack }: StageScreenProps) {
   const [progress] = useState(() => stageProgress(loadRecords()));
-  const clearedCount = STAGES.filter((s) => progress.has(s.id)).length;
+  const clearedCount = progress.size;
 
   const button = (stage: Stage) => (
     <StageButton
@@ -71,26 +69,26 @@ export function StageScreen({ onStart, onBack }: StageScreenProps) {
 
   /** ステップ1・2: 行が段（のまとまり）、列が じゅんばん／ぎゃく／ランダム の表 */
   const table = (step: 1 | 2) => {
+    // 段（のまとまり）ごとに、じゅんばん → ぎゃく → ランダム の順で並んでいる
     const stages = STAGES.filter((s) => s.step === step);
-    const rows = [...new Set(stages.map((s) => s.dans.join(',')))].map((key) =>
-      stages.filter((s) => s.dans.join(',') === key),
-    );
+    const rows: Stage[][] = [];
+    for (let i = 0; i < stages.length; i += ORDERS.length) rows.push(stages.slice(i, i + ORDERS.length));
     return (
       <div className="stage-table" role="group" aria-label={STEP_TITLES[step]}>
         <span aria-hidden="true" />
-        {PATTERNS.map((order) => (
-          <span key={order} className="stage-col-head" aria-hidden="true">
-            {PATTERN_LABELS[order]}
-            <small>{formatDuration(rows[0].find((s) => s.order === order)!.targetSeconds)}</small>
+        {rows[0].map((s) => (
+          <span key={s.order} className="stage-col-head" aria-hidden="true">
+            {PATTERN_LABELS[s.order]}
+            <small>{formatDuration(s.targetSeconds)}</small>
           </span>
         ))}
         {rows.map((row) => (
           <div key={row[0].id} className="stage-row">
             <span className="stage-row-head" aria-hidden="true">
-              {step === 1 ? row[0].dans[0] : formatRange(row[0].dans).replace('のだん', '')}
+              {formatDans(row[0].dans)}
               <small>のだん</small>
             </span>
-            {PATTERNS.map((order) => button(row.find((s) => s.order === order)!))}
+            {row.map(button)}
           </div>
         ))}
       </div>
@@ -128,7 +126,8 @@ export function StageScreen({ onStart, onBack }: StageScreenProps) {
       <section className="panel" aria-labelledby="step3-heading">
         <h2 id="step3-heading">{STEP_TITLES[3]}</h2>
         <p className="hint">
-          {STEP_HINTS[3]}（81もん ランダム・もくひょう {formatDuration(finalStage.targetSeconds)}）
+          {STEP_HINTS[3]}（{poolSize(finalStage.dans)}もん {PATTERN_LABELS[finalStage.order]}・もくひょう{' '}
+          {formatDuration(finalStage.targetSeconds)}）
         </p>
         <button
           type="button"

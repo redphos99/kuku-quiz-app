@@ -6,6 +6,7 @@ import {
   isStageUnlocked,
   nextStage,
   stageLabel,
+  stageOutcome,
   stageProgress,
   stageQuestions,
 } from './stages';
@@ -154,6 +155,31 @@ describe('isStageUnlocked / nextStage', () => {
     expect(nextStage(stage('1-random'))?.id).toBe('2-asc');
     expect(nextStage(stage('9-random'))?.id).toBe('123-asc');
     expect(nextStage(stage('123456789-random'))).toBeUndefined();
+  });
+});
+
+describe('stageOutcome', () => {
+  it('reports a first clear and the next stage that it unlocks', () => {
+    const s = stage('2-asc');
+    expect(stageOutcome(record(s), s, [])).toEqual({
+      stage: s,
+      cleared: true,
+      firstClear: true,
+      next: stage('2-desc'),
+    });
+  });
+
+  it('is not a first clear when the stage was cleared before', () => {
+    const s = stage('2-asc');
+    expect(stageOutcome(record(s), s, [record(s)]).firstClear).toBe(false);
+  });
+
+  it('gives no next stage when not cleared, or when the next one is still locked', () => {
+    const s = stage('2-asc');
+    const slow = stageOutcome(record(s, { durationSeconds: s.targetSeconds + 1 }), s, []);
+    expect(slow).toMatchObject({ cleared: false, firstClear: false, next: undefined });
+    // 9-random のつぎの 123-asc は、ステップ1の1〜3のだんを ぜんぶ クリアするまで あそべない
+    expect(stageOutcome(record(stage('9-random')), stage('9-random'), []).next).toBeUndefined();
   });
 });
 

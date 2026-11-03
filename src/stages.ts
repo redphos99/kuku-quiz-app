@@ -1,7 +1,5 @@
 import type { Order, Question, QuizRecord, Stage, StageStep } from './types';
-import { DANS, formatRange, generateQuestions, poolSize } from './quiz';
-
-const ORDERS: readonly Order[] = ['asc', 'desc', 'random'];
+import { DANS, ORDERS, formatRange, generateQuestions, poolSize } from './quiz';
 
 export const PATTERN_LABELS: Record<Order, string> = {
   asc: 'じゅんばん',
@@ -26,7 +24,7 @@ const SECONDS_PER_QUESTION: Record<StageStep, Record<Order, number>> = {
 };
 
 /** ステップ2でまとめる段 */
-export const STEP2_GROUPS: readonly number[][] = [
+const STEP2_GROUPS: readonly number[][] = [
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
@@ -76,8 +74,10 @@ function buildStages(): Stage[] {
 /** 全ステージ（おすすめの順） */
 export const STAGES: readonly Stage[] = buildStages();
 
+const STAGE_BY_ID = new Map(STAGES.map((s) => [s.id, s]));
+
 export function findStage(id: string | undefined): Stage | undefined {
-  return id === undefined ? undefined : STAGES.find((s) => s.id === id);
+  return id === undefined ? undefined : STAGE_BY_ID.get(id);
 }
 
 /** 「3のだん ぎゃく」「1〜3のだん ランダム」「ぜんぶの だん」 */
@@ -139,4 +139,35 @@ export function isStageUnlocked(stage: Stage, cleared: { has(id: string): boolea
 export function nextStage(stage: Stage): Stage | undefined {
   const index = STAGES.findIndex((s) => s.id === stage.id);
   return index === -1 ? undefined : STAGES[index + 1];
+}
+
+/** ステップれんしゅうの結果 */
+export interface StageOutcome {
+  stage: Stage;
+  cleared: boolean;
+  /** はじめてのクリアか */
+  firstClear: boolean;
+  /** 次のステージ（クリアして、次が解放されているときだけ） */
+  next?: Stage;
+}
+
+/**
+ * 今回の記録の結果を、それまでの記録と比べて判定する
+ * （previous は今回の記録を含まない。保存に失敗しても、今回のクリアは次の解放に反映する）
+ */
+export function stageOutcome(
+  record: QuizRecord,
+  stage: Stage,
+  previous: readonly QuizRecord[],
+): StageOutcome {
+  const progress = stageProgress(previous);
+  const cleared = isClearRecord(record, stage);
+  const next = nextStage(stage);
+  const clearedNow = { has: (id: string) => progress.has(id) || (cleared && id === stage.id) };
+  return {
+    stage,
+    cleared,
+    firstClear: cleared && !progress.has(stage.id),
+    next: cleared && next && isStageUnlocked(next, clearedNow) ? next : undefined,
+  };
 }

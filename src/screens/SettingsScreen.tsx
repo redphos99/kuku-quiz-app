@@ -5,6 +5,7 @@ import {
   DANS,
   MAX_QUESTIONS,
   MIN_QUESTIONS,
+  ORDERS,
   ORDER_LABELS,
   formatRange,
   poolSize,
@@ -15,8 +16,6 @@ interface SettingsScreenProps {
   onStart: (settings: QuizSettings) => void;
   onBack: () => void;
 }
-
-const ORDERS: Order[] = ['asc', 'desc', 'random'];
 
 function parseCustomCount(text: string): number | null {
   if (!/^\d+$/.test(text)) return null;
