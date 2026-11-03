@@ -9,6 +9,7 @@ import { ResultScreen } from './screens/ResultScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { StageScreen } from './screens/StageScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { AnalysisScreen } from './screens/AnalysisScreen';
 
 /** どんな練習をするか */
 type BasePlan = { kind: 'free'; settings: QuizSettings } | { kind: 'stage'; stage: Stage };
@@ -29,7 +30,8 @@ type Screen =
       outcome?: StageOutcome;
     }
   | { name: 'stages' }
-  | { name: 'history' };
+  | { name: 'history' }
+  | { name: 'analysis' };
 
 function baseOf(plan: Plan): BasePlan {
   return plan.kind === 'retry' ? plan.from : plan;
@@ -92,6 +94,7 @@ export default function App() {
   const showStages = () => setScreen({ name: 'stages' });
   const showSettings = () => setScreen({ name: 'settings' });
   const showHistory = () => setScreen({ name: 'history' });
+  const showAnalysis = () => setScreen({ name: 'analysis' });
   /** 練習をやめたとき・結果画面から もどる先 */
   const backFor = (plan: Plan) =>
     baseOf(plan).kind === 'stage'
@@ -101,7 +104,12 @@ export default function App() {
   switch (screen.name) {
     case 'home':
       return (
-        <HomeScreen onShowStages={showStages} onShowFree={showSettings} onShowHistory={showHistory} />
+        <HomeScreen
+          onShowStages={showStages}
+          onShowFree={showSettings}
+          onShowHistory={showHistory}
+          onShowAnalysis={showAnalysis}
+        />
       );
     case 'settings':
       return (
@@ -147,5 +155,7 @@ export default function App() {
     }
     case 'history':
       return <HistoryScreen onBack={showHome} />;
+    case 'analysis':
+      return <AnalysisScreen onBack={showHome} />;
   }
 }

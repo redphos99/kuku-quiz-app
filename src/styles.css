@@ -21,6 +21,12 @@
   --gold: #f5c451;
   --gold-soft: #fff4c7;
   --gold-ink: #78350f;
+  /* にがてマップの濃さ（0＝とくい 〜 4＝にがて）。オレンジ1色の明るい→こい */
+  --heat-0: #fff6ea;
+  --heat-1: #ffe2bf;
+  --heat-2: #fcc58c;
+  --heat-3: #f5a05a;
+  --heat-4: #c2570c;
 
   --radius: 20px;
   --font: 'Hiragino Maru Gothic ProN', 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic',
@@ -1135,4 +1141,162 @@ h2 {
 .badge-clear {
   background: var(--ok-soft);
   color: var(--ok);
+}
+
+/* ---------- ぶんせき ---------- */
+
+.top-bar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-columns: 1.4em repeat(9, 1fr);
+  gap: 3px;
+}
+
+.heatmap-row {
+  display: contents;
+}
+
+.heatmap-corner,
+.heatmap-head {
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: clamp(0.7rem, 3vw, 0.95rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.heat-0 { background: var(--heat-0); }
+.heat-1 { background: var(--heat-1); }
+.heat-2 { background: var(--heat-2); }
+.heat-3 { background: var(--heat-3); }
+.heat-4 { background: var(--heat-4); color: #fff; }
+
+.heatmap-cell.heat-0 {
+  border-color: var(--line);
+}
+
+.heatmap-cell.is-empty,
+.heatmap-swatch.is-empty {
+  background: var(--surface);
+  border: 2px dashed var(--line);
+  color: var(--ink-soft);
+}
+
+.heatmap-cell.is-selected {
+  border: 3px solid var(--primary);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.heatmap-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.heatmap-swatch.heat-0 {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.heatmap-swatch.is-empty {
+  margin-left: 12px;
+}
+
+.heatmap-detail {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 0.95rem;
+}
+
+.mistake-list li {
+  justify-content: space-between;
+  background: var(--oops-soft);
+}
+
+.trend {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 0.9rem;
+}
+
+.trend-title {
+  font-weight: 800;
+}
+
+.trend-value {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-value strong {
+  color: var(--ink);
+}
+
+.trend-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.trend-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.trend-axis {
+  font-size: 10px;
+  fill: var(--ink-soft);
+}
+
+.trend-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-dot {
+  fill: var(--primary);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.trend-hit {
+  fill: transparent;
+  cursor: pointer;
 }

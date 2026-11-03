@@ -6,9 +6,10 @@ interface HomeScreenProps {
   onShowStages: () => void;
   onShowFree: () => void;
   onShowHistory: () => void;
+  onShowAnalysis: () => void;
 }
 
-export function HomeScreen({ onShowStages, onShowFree, onShowHistory }: HomeScreenProps) {
+export function HomeScreen({ onShowStages, onShowFree, onShowHistory, onShowAnalysis }: HomeScreenProps) {
   const [clearedCount] = useState(() => stageProgress(loadRecords()).size);
 
   return (
@@ -20,9 +21,14 @@ export function HomeScreen({ onShowStages, onShowFree, onShowHistory }: HomeScre
           </span>
           くくれんしゅう
         </h1>
-        <button type="button" className="btn btn-ghost btn-small" onClick={onShowHistory}>
-          きろく
-        </button>
+        <div className="top-bar-actions">
+          <button type="button" className="btn btn-ghost btn-small" onClick={onShowAnalysis}>
+            ぶんせき
+          </button>
+          <button type="button" className="btn btn-ghost btn-small" onClick={onShowHistory}>
+            きろく
+          </button>
+        </div>
       </header>
 
       <p className="home-lead">どっちで れんしゅうする？</p>
