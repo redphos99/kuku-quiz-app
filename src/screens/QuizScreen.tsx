@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AnswerLog, Question, QuizSettings } from '../types';
-import { formatClock, generateQuestions } from '../quiz';
+import type { AnswerLog, Question } from '../types';
+import { formatClock } from '../quiz';
 import { Numpad } from '../components/Numpad';
 
 export interface QuizResult {
@@ -9,9 +9,10 @@ export interface QuizResult {
 }
 
 interface QuizScreenProps {
-  settings: QuizSettings;
-  /** 指定すると、設定から作る代わりにこの問題をこの順で出題する（まちがえ直し用） */
-  questions?: Question[];
+  /** この問題をこの順で出題する */
+  questions: Question[];
+  /** ステップれんしゅうの目標タイム（秒）。指定するとタイマーの横に表示する */
+  targetSeconds?: number;
   onFinish: (result: QuizResult) => void;
   onQuit: () => void;
 }
@@ -21,8 +22,7 @@ const AUTO_ADVANCE_MS = 900;
 /** 連打で正誤の表示を飛ばしてしまわないための猶予 */
 const ADVANCE_GUARD_MS = 350;
 
-export function QuizScreen({ settings, questions: fixedQuestions, onFinish, onQuit }: QuizScreenProps) {
-  const [questions] = useState(() => fixedQuestions ?? generateQuestions(settings));
+export function QuizScreen({ questions, targetSeconds, onFinish, onQuit }: QuizScreenProps) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState('');
   const [answers, setAnswers] = useState<AnswerLog[]>([]);
@@ -127,6 +127,10 @@ export function QuizScreen({ settings, questions: fixedQuestions, onFinish, onQu
 
   const correctAnswer = question.dan * question.multiplier;
   const progress = ((index + (answering ? 0 : 1)) / total) * 100;
+  // 記録と同じく秒に丸めて比べる（最後の回答で時間が止まる）
+  const shownMs = endedAt.current === null ? elapsedMs : endedAt.current - startedAt.current;
+  const overTarget = targetSeconds !== undefined && Math.round(shownMs / 1000) > targetSeconds;
+  const targetText = targetSeconds === undefined ? undefined : formatClock(targetSeconds * 1000);
 
   return (
     <main className="screen quiz">
@@ -137,8 +141,14 @@ export function QuizScreen({ settings, questions: fixedQuestions, onFinish, onQu
         <div className="quiz-progress-text" aria-live="polite">
           <strong>{index + 1}</strong> / {total}もん
         </div>
-        <div className="quiz-clock" aria-label="けいかじかん">
-          {formatClock(elapsedMs)}
+        <div
+          className={'quiz-clock' + (overTarget ? ' is-over' : '')}
+          aria-label={
+            targetText === undefined ? 'けいかじかん' : `けいかじかん（もくひょう ${targetText}）`
+          }
+        >
+          {formatClock(shownMs)}
+          {targetText !== undefined && <span className="quiz-target">/ {targetText}</span>}
         </div>
       </header>
       <div

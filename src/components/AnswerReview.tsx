@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import type { AnswerLog } from '../types';
-import { formatSeconds, slowestCorrect } from '../quiz';
+import { SLOW_MIN_SECONDS, formatSeconds, slowestCorrect } from '../quiz';
 
 interface AnswerReviewProps {
   answers: readonly AnswerLog[];
@@ -10,7 +10,7 @@ interface AnswerReviewProps {
   showSlow?: boolean;
 }
 
-/** 1回分の答えから「まちがえた問題」と「時間がかかった問題（正解のうち上位3つ）」を並べて表示する */
+/** 1回分の答えから「まちがえた問題」と「時間がかかった問題（正解のうち3秒以上かかった上位3つ）」を並べて表示する */
 export function AnswerReview({
   answers,
   showNoMissMessage = false,
@@ -43,7 +43,7 @@ export function AnswerReview({
       {slow.length > 0 && (
         <section className="review" aria-labelledby={`${uid}-slow`}>
           <h2 id={`${uid}-slow`}>じかんが かかった もんだい</h2>
-          <p className="review-hint">せいかいしたけど、すこし じかんが かかったよ。</p>
+          <p className="review-hint">せいかいしたけど、{SLOW_MIN_SECONDS}秒いじょう かかったよ。</p>
           <ol className="review-list review-slow">
             {slow.map((a, i) => (
               <li key={i}>

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   accuracyPercent,
   formatClock,
+  formatDans,
   formatDate,
   formatDuration,
   formatRange,
@@ -82,6 +83,9 @@ describe('formatting helpers', () => {
     expect(formatRange([1, 2])).toBe('1・2のだん');
     expect(formatRange([9, 3, 4, 5, 1])).toBe('1・3〜5・9のだん');
     expect(formatRange([7])).toBe('7のだん');
+    expect(formatRange([])).toBe('-');
+    expect(formatDans([9, 3, 4, 5, 1])).toBe('1・3〜5・9');
+    expect(formatDans([7])).toBe('7');
   });
 
   it('formats durations', () => {
@@ -156,8 +160,14 @@ describe('slowestCorrect', () => {
   });
 
   it('returns fewer than 3 when there are not enough correct answers', () => {
-    expect(slowestCorrect([log(2, 2, true, 1), log(3, 3, false, 5)])).toHaveLength(1);
+    expect(slowestCorrect([log(2, 2, true, 4), log(3, 3, false, 5)])).toHaveLength(1);
     expect(slowestCorrect([log(3, 3, false, 5)])).toEqual([]);
+  });
+
+  it('only includes answers that took 3 seconds or more', () => {
+    const answers = [log(2, 2, true, 2.9), log(3, 3, true, 3), log(4, 4, true, 1), log(5, 5, true, 7)];
+    expect(slowestCorrect(answers).map((a) => a.seconds)).toEqual([7, 3]);
+    expect(slowestCorrect([log(2, 2, true, 1), log(3, 3, true, 2.9)])).toEqual([]);
   });
 });
 

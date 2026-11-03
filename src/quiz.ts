@@ -7,6 +7,8 @@ export const COUNT_PRESETS = [5, 10, 20, 30] as const;
 export const MIN_QUESTIONS = 1;
 export const MAX_QUESTIONS = 100;
 
+export const ORDERS: readonly Order[] = ['asc', 'desc', 'random'];
+
 export const ORDER_LABELS: Record<Order, string> = {
   asc: '1のだん → 9のだん',
   desc: '9のだん → 1のだん',
@@ -78,8 +80,12 @@ export function poolSize(range: readonly number[]): number {
 
 /** [1,2,3,5,9] → "1〜3・5・9のだん" */
 export function formatRange(range: readonly number[]): string {
+  return range.length === 0 ? '-' : `${formatDans(range)}のだん`;
+}
+
+/** [1,2,3,5,9] → "1〜3・5・9"（「のだん」なし） */
+export function formatDans(range: readonly number[]): string {
   const sorted = [...new Set(range)].sort((a, b) => a - b);
-  if (sorted.length === 0) return '-';
 
   const runs: number[][] = [];
   for (const dan of sorted) {
@@ -90,7 +96,7 @@ export function formatRange(range: readonly number[]): string {
   const parts = runs.flatMap((run) =>
     run.length >= 3 ? [`${run[0]}〜${run[run.length - 1]}`] : run.map(String),
   );
-  return `${parts.join('・')}のだん`;
+  return parts.join('・');
 }
 
 /** 83 → "1分23秒" */
@@ -124,6 +130,8 @@ export function formatDate(iso: string, now: Date = new Date()): string {
 
 /** 時間のかかった問題として表示する件数 */
 export const SLOW_COUNT = 3;
+/** この秒数以上かかった問題だけを「時間のかかった問題」にする */
+export const SLOW_MIN_SECONDS = 3;
 
 /** まちがえた問題（同じ問題を複数回まちがえていても1問にまとめる。出題された順） */
 export function missedQuestions(answers: readonly AnswerLog[]): Question[] {
@@ -138,10 +146,15 @@ export function missedQuestions(answers: readonly AnswerLog[]): Question[] {
   return result;
 }
 
-/** 正解した問題のうち、回答に時間がかかった順に上位 count 件（同じ秒数なら出題順） */
+/** 正解して、SLOW_MIN_SECONDS 秒以上かかった問題か */
+export function isSlowCorrect(a: AnswerLog): boolean {
+  return a.correct && a.seconds >= SLOW_MIN_SECONDS;
+}
+
+/** 正解した問題のうち SLOW_MIN_SECONDS 秒以上かかったものを、時間がかかった順に上位 count 件（同じ秒数なら出題順） */
 export function slowestCorrect(answers: readonly AnswerLog[], count = SLOW_COUNT): AnswerLog[] {
   return answers
-    .filter((a) => a.correct)
+    .filter(isSlowCorrect)
     .map((a, i) => ({ a, i }))
     .sort((x, y) => y.a.seconds - x.a.seconds || x.i - y.i)
     .slice(0, count)

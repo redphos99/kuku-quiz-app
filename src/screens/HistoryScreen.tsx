@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { loadRecords } from '../storage';
 import { ORDER_LABELS, accuracyPercent, formatDate, formatDuration, formatRange } from '../quiz';
+import { findStage, isClearRecord, stageLabel } from '../stages';
 import { AnswerReview } from '../components/AnswerReview';
 
 interface HistoryScreenProps {
@@ -34,6 +35,8 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
             const perfect = r.correctCount === r.questionCount;
             const open = openId === r.id;
             const detailId = `history-detail-${r.id}`;
+            const stage = findStage(r.stageId);
+            const cleared = stage !== undefined && isClearRecord(r, stage);
             return (
               <li key={r.id} className={'history-item' + (perfect ? ' is-perfect' : '')}>
                 <button
@@ -51,6 +54,7 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
                     <div className="history-line">
                       <span className="history-date">{formatDate(r.date)}</span>
                       {r.mode === 'retry' && <span className="badge badge-retry">やりなおし</span>}
+                      {cleared && <span className="badge badge-clear">クリア</span>}
                       {perfect && <span className="badge">ぜんぶせいかい</span>}
                     </div>
                     <div className="history-meta">
@@ -58,7 +62,9 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
                       <span>じかん {formatDuration(r.durationSeconds)}</span>
                     </div>
                     <div className="history-settings">
-                      {formatRange(r.range)} ／ {ORDER_LABELS[r.order]}
+                      {stage
+                        ? `ステップ ／ ${stageLabel(stage)}`
+                        : `${formatRange(r.range)} ／ ${ORDER_LABELS[r.order]}`}
                     </div>
                   </div>
                   <span className="history-chevron" aria-hidden="true">
